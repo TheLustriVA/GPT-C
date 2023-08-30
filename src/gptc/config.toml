@@ -1,0 +1,27 @@
+# General settings
+single_file_output = true
+
+# Include options for conversation
+include_title = true
+include_create_time = true
+include_update_time = false
+
+# Include options for messages
+[message]
+include_author_role = true
+include_author_name = false
+include_content_type = true
+include_parts = true
+include_status = false
+include_end_turn = false
+include_weight = false
+
+# Metadata options
+[metadata]
+include_is_user_system_message = false
+include_user_context_message_data = false
+include_finish_details = false
+include_timestamp = false
+include_message_type = false
+include_model_slug = false
+include_parent_id = false
