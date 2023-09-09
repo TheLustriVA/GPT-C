@@ -115,7 +115,13 @@ def generate_markdown(conversations, config, metadata=None):
     markdown_lines = []
     
     try:
+        # This is where the 'conversations' variable is sent to file
+        convo_check_dump = (f"Conversations: {type(conversations)} --> {conversations}")
+        with open("convo_dump.txt", "a", encoding="utf-8") as dump:
+            dump.write(convo_check_dump)
+            dump.write("\n")
         for conversation in conversations:
+            logging.info(f"Processing conversation {type(conversation)} --> {conversation}")
             # If conversation is a string, you might need to convert it to a dictionary
             if isinstance(conversation, str):
                 conversation = json.loads(conversation)
@@ -157,7 +163,14 @@ def generate_markdown(conversations, config, metadata=None):
         logging.error(f"An error occurred while generating Markdown: {e}")
         return None
 
-
+def get_json_sample(json_path: str, sample_size: int=10) -> None:
+    with open(json_path, 'r', encoding='utf-8') as f:
+        json_data = json.load(f)
+    for idx, conversation in enumerate(json_data):
+        if idx == sample_size:
+            break
+        with open("json_sample.json", 'w', encoding='utf-8') as f:
+            json.dump(conversation, f, indent=4)
 
 def save_to_markdown(markdown_texts, output_path, single_file_output=True):
     """
@@ -176,6 +189,9 @@ def save_to_markdown(markdown_texts, output_path, single_file_output=True):
         else:
             os.makedirs(output_path, exist_ok=True)
             for i, markdown_text in enumerate(markdown_texts):
+                logging.info(f"Saving: {markdown_text}")
+                if i > 10:
+                    break
                 output_file = os.path.join(output_path, f"conversation_{i+1}.md")
                 with open(output_file, 'w', encoding='utf-8') as f:
                     f.write(markdown_text)
@@ -204,8 +220,10 @@ def main(json_file_path, config_file_path=None, output_path="./output"):
 
 if __name__ == "__main__":
     # For now, hardcoding the paths; you can replace these with command-line arguments later
-    json_file_path = "conversations.json"
-    config_file_path = "config.toml"
-    output_path = "./output"
-    
-    main(json_file_path, config_file_path, output_path)
+    # json_file_path = "conversations.json"
+    # config_file_path = "config.toml"
+    # output_path = "./output"
+    # 
+    # main(json_file_path, config_file_path, output_path)
+
+    get_json_sample("conversations.json", 10)
