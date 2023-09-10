@@ -5,6 +5,10 @@ import os
 import logging
 import toml
 
+json_file_path = "src/gptc/conversations.json"
+config_file_path = "src/gptc/config.toml"
+output_path = "src/gptc/outputs"
+
 logging.basicConfig(level=logging.INFO)
 
 def configure_conversion(config_file=None):
@@ -39,7 +43,7 @@ def configure_conversion(config_file=None):
     
     if config_file:
         try:
-            user_config = toml.load(config_file)
+            user_config = toml.load(config_file_path)
             return {**default_config, **user_config}
         except Exception as e:
             logging.error(f"Failed to load config file: {e}")
@@ -79,9 +83,12 @@ def extract_conversations(json_data, config):
     
     extracted_conversations = []
     
+    logging.info(f"Extracting {len(json_data)} conversations.")
+    
     try:
         # Assuming json_data is a list now
         for conversation in json_data:
+            logging.info(f"Processing conversation {conversation}")
             extracted = {}
             
             if config.get('include_title'):
@@ -120,9 +127,11 @@ def generate_markdown(conversations, config, metadata=None):
         with open("convo_dump.txt", "a", encoding="utf-8") as dump:
             dump.write(convo_check_dump)
             dump.write("\n")
-        for conversation in conversations:
+        for idx, conversation in enumerate(conversations):
             logging.info(f"Processing conversation {type(conversation)} --> {conversation}")
             # If conversation is a string, you might need to convert it to a dictionary
+            if idx > 10:
+                break
             if isinstance(conversation, str):
                 conversation = json.loads(conversation)
     
@@ -199,7 +208,7 @@ def save_to_markdown(markdown_texts, output_path, single_file_output=True):
     except Exception as e:
         logging.error(f"An error occurred while saving the Markdown files: {e}")
 
-def main(json_file_path, config_file_path=None, output_path="./output"):
+def main(json_file_path, config_file_path=None, output_path="./output") -> None:
     """
     Main function to convert GPT-3 conversations from JSON to Markdown.
     """
@@ -213,17 +222,14 @@ def main(json_file_path, config_file_path=None, output_path="./output"):
     conversations = extract_conversations(json_data, config)
     
     # Step 4: Generate Markdown text based on the extracted conversations and configuration
-    markdown_texts = [generate_markdown(conversation, config) for conversation in conversations]
+    markdown_texts = generate_markdown(conversations, config)
     
     # Step 5: Save the Markdown text to a file or files
     save_to_markdown(markdown_texts, output_path, config.get("single_file_output", True))
 
 if __name__ == "__main__":
     # For now, hardcoding the paths; you can replace these with command-line arguments later
-    # json_file_path = "conversations.json"
-    # config_file_path = "config.toml"
-    # output_path = "./output"
-    # 
-    # main(json_file_path, config_file_path, output_path)
+    
+    main(json_file_path, config_file_path, output_path)
 
-    get_json_sample("conversations.json", 10)
+    # get_json_sample("conversations.json", 10)

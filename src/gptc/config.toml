@@ -9,7 +9,7 @@ include_update_time = false
 # Include options for messages
 [message]
 include_author_role = true
-include_author_name = false
+include_author_name = true
 include_content_type = true
 include_parts = true
 include_status = false
