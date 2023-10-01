@@ -1,5 +1,5 @@
 # General settings
-single_file_output = true
+single_file_output = false
 
 # Include options for conversation
 include_title = true
@@ -25,3 +25,4 @@ include_timestamp = false
 include_message_type = false
 include_model_slug = false
 include_parent_id = false
+

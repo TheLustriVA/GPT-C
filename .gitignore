@@ -1,5 +1,6 @@
 # env
 gpenv/
+src/gptc/conversations/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

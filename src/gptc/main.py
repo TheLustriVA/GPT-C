@@ -72,44 +72,83 @@ def load_json_file(file_path):
 
 
 def extract_conversations(json_data, config):
-    """
-    Extract conversations from the loaded JSON data based on the configuration.
-    """
     logging.info("Extracting conversations based on configuration.")
     
-    if not json_data:
-        logging.error("No JSON data provided.")
+    if not isinstance(json_data, list):
+        logging.error("JSON data is not a list.")
         return None
+    
+    logging.info(f"json_data: {json_data}")
     
     extracted_conversations = []
     
-    logging.info(f"Extracting {len(json_data)} conversations.")
-    
     try:
-        # Assuming json_data is a list now
         for conversation in json_data:
             logging.info(f"Processing conversation {conversation}")
             extracted = {}
             
-            if config.get('include_title'):
+            # Include options for conversation
+            if config.get('include_title', False):
                 extracted['title'] = conversation.get('title', 'Untitled')
-            
-            if config.get('include_timestamp'):
-                extracted['timestamp'] = conversation.get('create_time', 'Unknown')
-            
-            if config.get('include_author'):
-                extracted['author'] = conversation.get('author', {}).get('role', 'Unknown')
-            
-            if config.get('include_content'):
-                extracted['content'] = conversation.get('content', {}).get('parts', [])
+
+            if config.get('include_create_time', False):
+                extracted['create_time'] = conversation.get('create_time', 'Unknown')
+
+            if config.get('include_update_time', False):
+                extracted['update_time'] = conversation.get('update_time', 'Unknown')
+
+            # Include options for messages
+            message_config = config.get('message', {})
+            if message_config.get('include_author_role', False):
+                extracted['author_role'] = conversation.get('author', {}).get('role', 'Unknown')
+
+            if message_config.get('include_author_name', False):
+                extracted['author_name'] = conversation.get('author', {}).get('name', 'Unknown')
+
+            if message_config.get('include_content_type', False):
+                extracted['content_type'] = conversation.get('content', {}).get('type', 'Unknown')
+
+            if message_config.get('include_parts', False):
+                extracted['parts'] = conversation.get('content', {}).get('parts', [])
+
+            if message_config.get('include_status', False):
+                extracted['status'] = conversation.get('status', 'Unknown')
+
+            if message_config.get('include_end_turn', False):
+                extracted['end_turn'] = conversation.get('end_turn', 'Unknown')
+
+            if message_config.get('include_weight', False):
+                extracted['weight'] = conversation.get('weight', 'Unknown')
+
+            # Metadata options
+            metadata_config = config.get('metadata', {})
+            if metadata_config.get('include_is_user_system_message', False):
+                extracted['is_user_system_message'] = conversation.get('is_user_system_message', 'Unknown')
+
+            if metadata_config.get('include_user_context_message_data', False):
+                extracted['user_context_message_data'] = conversation.get('user_context_message_data', 'Unknown')
+
+            if metadata_config.get('include_finish_details', False):
+                extracted['finish_details'] = conversation.get('finish_details', 'Unknown')
+
+            if metadata_config.get('include_timestamp', False):
+                extracted['timestamp'] = conversation.get('timestamp', 'Unknown')
+
+            if metadata_config.get('include_message_type', False):
+                extracted['message_type'] = conversation.get('message_type', 'Unknown')
+
+            if metadata_config.get('include_model_slug', False):
+                extracted['model_slug'] = conversation.get('model_slug', 'Unknown')
+
+            if metadata_config.get('include_parent_id', False):
+                extracted['parent_id'] = conversation.get('parent_id', 'Unknown')
             
             extracted_conversations.append(extracted)
     
     except Exception as e:
         logging.error(f"An error occurred while extracting conversations: {e}")
         return None
-    logging.info(f"Extracted {len(extracted_conversations)} conversations.")
-    logging.info(f"Example conversation: {extracted_conversations[0]}")
+    logging.info(f"extracted_conversations: {extracted_conversations}")
     return extracted_conversations
 
 def generate_markdown(conversations, config, metadata=None):
@@ -181,7 +220,7 @@ def get_json_sample(json_path: str, sample_size: int=10) -> None:
         with open("json_sample.json", 'w', encoding='utf-8') as f:
             json.dump(conversation, f, indent=4)
 
-def save_to_markdown(markdown_texts, output_path, single_file_output=True):
+def save_to_markdown(markdown_texts, output_path, single_file_output=False):
     """
     Save the generated Markdown text to a .md file or separate .md files based on the configuration.
     """
@@ -193,43 +232,30 @@ def save_to_markdown(markdown_texts, output_path, single_file_output=True):
     
     try:
         if single_file_output:
+            logging.info("Single file output.")
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.write("\n---\n".join(markdown_texts))
         else:
+            logging.info("Multiple file output.")
             os.makedirs(output_path, exist_ok=True)
             for i, markdown_text in enumerate(markdown_texts):
                 logging.info(f"Saving: {markdown_text}")
                 if i > 10:
                     break
                 output_file = os.path.join(output_path, f"conversation_{i+1}.md")
+                logging.info(f"Saving to {output_file}.")
                 with open(output_file, 'w', encoding='utf-8') as f:
                     f.write(markdown_text)
     
     except Exception as e:
         logging.error(f"An error occurred while saving the Markdown files: {e}")
 
-def main(json_file_path, config_file_path=None, output_path="./output") -> None:
-    """
-    Main function to convert GPT-3 conversations from JSON to Markdown.
-    """
-    # Step 1: Load the configuration
+def main(json_file_path, config_file_path=None, output_path="./output"):
     config = configure_conversion(config_file_path)
-    
-    # Step 2: Load the JSON file
     json_data = load_json_file(json_file_path)
-    
-    # Step 3: Extract conversations based on the configuration
     conversations = extract_conversations(json_data, config)
-    
-    # Step 4: Generate Markdown text based on the extracted conversations and configuration
     markdown_texts = generate_markdown(conversations, config)
-    
-    # Step 5: Save the Markdown text to a file or files
-    save_to_markdown(markdown_texts, output_path, config.get("single_file_output", True))
+    save_to_markdown(markdown_texts, output_path, config.get("single_file_output"))
 
 if __name__ == "__main__":
-    # For now, hardcoding the paths; you can replace these with command-line arguments later
-    
     main(json_file_path, config_file_path, output_path)
-
-    # get_json_sample("conversations.json", 10)
